@@ -177,7 +177,7 @@
 		"Scripts/Ubuntu_26_04/cross_x86",
 		"Scripts/Ubuntu_26_04/build_install_mesa.sh",
 		"build_libsegfault.sh",
-		"build_install_renderdoc.sh",
+		"Scripts/Ubuntu_26_04/build_install_renderdoc.sh",
 		"Scripts/Ubuntu_26_04/build_install_gfxreconstruct.sh",
 		"mega_install_packages.sh",
 		"Scripts/chroot.py",
@@ -240,7 +240,7 @@
 	],
 
 	"Commands_InChroot": [
-		"echo \"nameserver 8.8.8.8\" > /etc/resolv.conf",
+		"echo \"nameserver 10.0.2.3\" > /etc/resolv.conf",
 		"echo \"US/Eastern\" >/etc/timezone",
 		"ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime",
 		"chmod 1777 /tmp",
@@ -291,7 +291,7 @@
 
 	"Commands_Stage2": [
 		"export ROOTFS=./RootFS",
-    "reset",
+    "stty sane",
     "rm -Rf $ROOTFS/tmp/*",
     "echo 'Breaking'",
     "python3 $ROOTFS/chroot.py break",

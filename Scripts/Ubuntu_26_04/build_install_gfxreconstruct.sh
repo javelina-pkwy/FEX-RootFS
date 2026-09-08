@@ -44,6 +44,8 @@ cd Build_x86
 
 cmake \
 	-DCMAKE_INSTALL_PREFIX=/usr \
+	-DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+	-DBUILD_WERROR=OFF \
 	-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/linux_x86_32.cmake \
 	-DCMAKE_BUILD_TYPE=Release -G Ninja ..
 ninja
@@ -54,7 +56,7 @@ cd ..
 
 cd Build
 
-cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -G Ninja ..
+cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_WERROR=OFF -DCMAKE_BUILD_TYPE=Release -G Ninja ..
 ninja
 
 ninja install

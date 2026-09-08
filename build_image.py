@@ -12,6 +12,7 @@ import tarfile
 import telnetlib
 import time
 import json
+import re
 from pathlib import Path
 from shutil import which
 
@@ -32,6 +33,13 @@ NeededApplications = [
         "mksquashfs",
         "mkfs.erofs",
     ]
+
+# Terminal control sequences from the VM (SeaBIOS resets, apt progress bars setting scroll
+# regions, etc.) get relayed over the serial console. Strip them so they don't reprogram the
+# host terminal, and so the build log stays readable.
+ANSI_ESCAPE_RE = re.compile(rb'\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[ -/]*[0-~])')
+def Sanitize(data):
+    return ANSI_ESCAPE_RE.sub(b'', data).decode(errors='replace').rstrip()
 
 def CreateDir(Dir):
     try:
@@ -285,7 +293,7 @@ def Stage1(CacheDir, RootFSDir, config_json):
 
     process = subprocess.Popen(QEmuCommand, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin = subprocess.PIPE)
     for line in process.stderr:
-        print(line.decode().rstrip())
+        print(Sanitize(line))
         if line.decode().find("QEMU waiting for connection") != -1:
             break
 
@@ -297,7 +305,7 @@ def Stage1(CacheDir, RootFSDir, config_json):
         line = tn.read_until(b"\n")
         # Sometimes the line splits badly ?
         TestLine = PrevLine + line.rstrip()
-        print(line.decode().rstrip())
+        print(Sanitize(line))
         # After this point the username and password will be set and we can login
         if b"running 'modules:final'" in TestLine:
             break;
@@ -322,7 +330,7 @@ def Stage1(CacheDir, RootFSDir, config_json):
 
     while True:
         line = tn.read_until(b"\n")
-        print(line.decode().rstrip())
+        print(Sanitize(line))
         if b"Password:" in line:
             tn.write(Username.encode('ascii') + b"\n")
             break
@@ -333,12 +341,12 @@ def Stage1(CacheDir, RootFSDir, config_json):
 
     def ExecuteCommandAndWait(tn, Command):
         eager = tn.read_very_eager()
-        print(eager.decode().rstrip())
+        print(Sanitize(eager))
 
         tn.write(str.encode(Command + ' ; echo -e "\\x44\\x4f\\x4e\\x45" ;\n'))
         while True:
             line = tn.read_until(b"\n")
-            print(line.decode().rstrip())
+            print(Sanitize(line))
             if b"DONE" in line:
                 break;
 
@@ -428,7 +436,7 @@ def Stage1(CacheDir, RootFSDir, config_json):
         ExecuteCommandAndWait(tn, "rm -Rf ./RootFS/" + dir)
 
     # Reset the terminal to make it sane
-    ExecuteCommandAndWait(tn, "reset")
+    ExecuteCommandAndWait(tn, "stty sane")
 
     ExecuteCommandAndWait(tn, "cd RootFS/")
     ExecuteCommandAndWait(tn, "tar {} -cf ../Stage1_{} *".format(PIGZPrompt, config_json["Guest_Image"]))
