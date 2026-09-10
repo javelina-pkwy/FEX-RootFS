@@ -36,7 +36,7 @@
 		"libgles2",
 		"libglx-mesa0",
 		"libgl1-mesa-dri",
-    "libglx-mesa0",
+		"libglx-mesa0",
 		"libglvnd-dev",
 		"libglvnd-dev:i386",
 		"libglu1-mesa",
@@ -61,7 +61,7 @@
 		"libgles2:i386",
 		"libglx-mesa0:i386",
 		"libgl1-mesa-dri:i386",
-    "libglx-mesa0:i386",
+		"libglx-mesa0:i386",
 		"libglu1-mesa:i386",
 		"libunwind8:i386",
 		"libsdl1.2debian:i386",
@@ -164,7 +164,7 @@
 		"pkgconf",
 		"pkgconf:i386",
 		"clinfo",
-    "gir1.2-gtk-3.0"
+		"gir1.2-gtk-3.0"
 	],
 
 	"CopyFiles_Stage0_CMT": [

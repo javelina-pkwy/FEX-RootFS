@@ -34,15 +34,14 @@ NeededApplications = [
         "mkfs.erofs",
     ]
 
-# Terminal control sequences from the VM (SeaBIOS resets, apt progress bars setting scroll
-# regions, etc.) get relayed over the serial console. Strip them so they don't reprogram the
-# host terminal, and so the build log stays readable.
+# Terminal control sequences from the VM get relayed over the serial console. 
+# When these appear in the host terminal, they can corrupt the output, and 
+# make it hard for a human user to read.
 ANSI_ESCAPE_RE = re.compile(rb'\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[ -/]*[0-~])')
 def Sanitize(data):
     return ANSI_ESCAPE_RE.sub(b'', data).decode(errors='replace').rstrip()
 
-# Configs hardcode the nameserver written to the rootfs's /etc/resolv.conf. Allow overriding it
-# with -nameserver without having to edit every config.
+# Allow overriding the default nameserver, which is needed on some corporate networks.
 DEFAULT_NAMESERVER = "8.8.8.8"
 def SubstituteNameserver(Command):
     return Command.replace("nameserver " + DEFAULT_NAMESERVER, "nameserver " + nameserver)
