@@ -436,7 +436,7 @@ def Stage1(CacheDir, RootFSDir, config_json):
         ExecuteCommandAndWait(tn, "rm -Rf ./RootFS/" + dir)
 
     # Reset the terminal to make it sane
-    ExecuteCommandAndWait(tn, "stty sane")
+    ExecuteCommandAndWait(tn, "reset")
 
     ExecuteCommandAndWait(tn, "cd RootFS/")
     ExecuteCommandAndWait(tn, "tar {} -cf ../Stage1_{} *".format(PIGZPrompt, config_json["Guest_Image"]))
