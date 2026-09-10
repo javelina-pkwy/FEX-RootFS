@@ -240,7 +240,7 @@
 	],
 
 	"Commands_InChroot": [
-		"echo \"nameserver 10.0.2.3\" > /etc/resolv.conf",
+		"echo \"nameserver 8.8.8.8\" > /etc/resolv.conf",
 		"echo \"US/Eastern\" >/etc/timezone",
 		"ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime",
 		"chmod 1777 /tmp",

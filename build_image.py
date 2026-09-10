@@ -41,6 +41,12 @@ ANSI_ESCAPE_RE = re.compile(rb'\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|
 def Sanitize(data):
     return ANSI_ESCAPE_RE.sub(b'', data).decode(errors='replace').rstrip()
 
+# Configs hardcode the nameserver written to the rootfs's /etc/resolv.conf. Allow overriding it
+# with -nameserver without having to edit every config.
+DEFAULT_NAMESERVER = "8.8.8.8"
+def SubstituteNameserver(Command):
+    return Command.replace("nameserver " + DEFAULT_NAMESERVER, "nameserver " + nameserver)
+
 def CreateDir(Dir):
     try:
         os.mkdir(Dir, 0o755)
@@ -367,7 +373,7 @@ def Stage1(CacheDir, RootFSDir, config_json):
 
     print("Commands_Stage1_0")
     for command in config_json["Commands_Stage1_0"]:
-        ExecuteCommandAndWait(tn, command)
+        ExecuteCommandAndWait(tn, SubstituteNameserver(command))
 
     print("Output rootfs now")
     ExecuteCommandAndWait(tn, "mkdir RootFS")
@@ -385,7 +391,7 @@ def Stage1(CacheDir, RootFSDir, config_json):
 
     print("Commands_Stage1")
     for command in config_json["Commands_Stage1"]:
-        ExecuteCommandAndWait(tn, command)
+        ExecuteCommandAndWait(tn, SubstituteNameserver(command))
 
     # Copy over things from the git root when specified
     print("CopyFiles_Stage1")
@@ -401,7 +407,7 @@ def Stage1(CacheDir, RootFSDir, config_json):
 
     print("Commands_InChroot")
     for command in config_json["Commands_InChroot"]:
-        ExecuteCommandAndWait(tn, command)
+        ExecuteCommandAndWait(tn, SubstituteNameserver(command))
 
     Command = config_json["PKGInstallCMD"]
     Send = False
@@ -419,13 +425,13 @@ def Stage1(CacheDir, RootFSDir, config_json):
 
     print("Commands_InChroot2")
     for command in config_json["Commands_InChroot2"]:
-        ExecuteCommandAndWait(tn, command)
+        ExecuteCommandAndWait(tn, SubstituteNameserver(command))
 
     ExecuteCommand(tn, "exit")
 
     print("Commands_Stage2")
     for command in config_json["Commands_Stage2"]:
-        ExecuteCommandAndWait(tn, command)
+        ExecuteCommandAndWait(tn, SubstituteNameserver(command))
 
     print("RemoveFiles_Stage2")
     for file in config_json["RemoveFiles_Stage2"]:
@@ -567,13 +573,14 @@ def CheckPrograms():
 # Argument parser setup
 parser = argparse.ArgumentParser(
     description="Script to configure and build a RootFS using QEMU with specified settings.",
-    usage="%(prog)s [-m <memory>] [-disable-kvm] [-no-repack-tar] [-no-repack-squashfs] [-no-repack-erofs] <Config.json> <Cache directory> <RootFS Dir>"
+    usage="%(prog)s [-m <memory>] [-disable-kvm] [-nameserver <ip>] [-no-repack-tar] [-no-repack-squashfs] [-no-repack-erofs] <Config.json> <Cache directory> <RootFS Dir>"
 )
 parser.add_argument("config", type=str, help="Path to a RootFS config .json file")
 parser.add_argument("cache_dir", type=str, help="Cache directory")
 parser.add_argument("rootfs_dir", type=str, help="RootFS directory")
 parser.add_argument("-m", type=str, help="Memory size for QEMU (e.g., 2G, 512M, etc.)", default="32G")
 parser.add_argument("-disable-kvm", action="store_true", help="Disable KVM in QEMU")
+parser.add_argument("-nameserver", type=str, default=DEFAULT_NAMESERVER, help="DNS server the rootfs uses while installing packages (default: %(default)s). Use 10.0.2.3 to go through QEMU's DNS proxy on networks that block public resolvers")
 parser.add_argument("-no-repack-tar", action="store_true", help="Do not repackage into a tar archive")
 parser.add_argument("-no-repack-squashfs", action="store_true", help="Do not repackage into a SquashFS image")
 parser.add_argument("-no-repack-erofs", action="store_true", help="Do not repackage into a EroFS image")
@@ -589,6 +596,7 @@ CacheDir = args.cache_dir
 RootFSDir = args.rootfs_dir
 memory = args.m
 disable_kvm = args.disable_kvm
+nameserver = args.nameserver
 
 # Load our json file
 config_file = open(args.config, "r")
